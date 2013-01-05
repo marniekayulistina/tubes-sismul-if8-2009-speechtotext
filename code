@@ -66,3 +66,32 @@ namespace SpeechToText
 
         #endregion
 
+#region internal functions and methods
+
+        /// <summary>
+        /// Creates the speech engine.
+        /// </summary>
+        /// <param name="preferredCulture">The preferred culture.</param>
+        /// <returns></returns>
+        private SpeechRecognitionEngine createSpeechEngine(string preferredCulture)
+        {
+            foreach (RecognizerInfo config in SpeechRecognitionEngine.InstalledRecognizers())
+            {
+                if (config.Culture.ToString() == preferredCulture)
+                {
+                    speechRecognitionEngine = new SpeechRecognitionEngine(config);
+                    break;
+                }
+            }
+
+            // if the desired culture is not found, then load default
+            if (speechRecognitionEngine == null)
+            {
+                MessageBox.Show("The desired culture is not installed on this machine, the speech-engine will continue using "
+                    + SpeechRecognitionEngine.InstalledRecognizers()[0].Culture.ToString() + " as the default culture.",
+                    "Culture " + preferredCulture + " not found!");
+                speechRecognitionEngine = new SpeechRecognitionEngine(SpeechRecognitionEngine.InstalledRecognizers()[0]);
+            }
+
+            return speechRecognitionEngine;
+        }
