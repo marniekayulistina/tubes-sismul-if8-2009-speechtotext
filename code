@@ -1,0 +1,68 @@
+#region using directives
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Speech.Recognition;
+using System.Windows;
+using System.Diagnostics;
+
+#endregion
+
+namespace SpeechToText
+{
+    /// <summary>
+    /// MainWindow class
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        #region locals
+
+        /// <summary>
+        /// the engine
+        /// </summary>
+        SpeechRecognitionEngine speechRecognitionEngine = null;
+
+        /// <summary>
+        /// list of predefined commands
+        /// </summary>
+        List<Word> words = new List<Word>();
+
+        #endregion
+
+        #region ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainWindow"/> class.
+        /// </summary>
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            try
+            {
+                // create the engine
+                speechRecognitionEngine = createSpeechEngine("en-US");
+
+                // hook to events
+                speechRecognitionEngine.AudioLevelUpdated += new EventHandler<AudioLevelUpdatedEventArgs>(engine_AudioLevelUpdated);
+                speechRecognitionEngine.SpeechRecognized += new EventHandler<SpeechRecognizedEventArgs>(engine_SpeechRecognized);
+
+                // load dictionary
+                loadGrammarAndCommands();
+
+                // use the system's default microphone
+                speechRecognitionEngine.SetInputToDefaultAudioDevice();
+
+                // start listening
+                speechRecognitionEngine.RecognizeAsync(RecognizeMode.Multiple);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Voice recognition failed");
+            }
+        }
+
+        #endregion
+
