@@ -95,3 +95,66 @@ namespace SpeechToText
 
             return speechRecognitionEngine;
         }
+
+
+/// <summary>
+        /// Loads the grammar and commands.
+        /// </summary>
+        private void loadGrammarAndCommands()
+        {
+            try
+            {
+                Choices texts = new Choices();
+                string[] lines = File.ReadAllLines(Environment.CurrentDirectory + "\\example.txt");
+                foreach (string line in lines)
+                {
+                    // skip commentblocks and empty lines..
+                    if (line.StartsWith("--") || line == String.Empty) continue;
+
+                    // split the line
+                    var parts = line.Split(new char[] { '|' });
+
+                    // add commandItem to the list for later lookup or execution
+                    words.Add(new Word() { Text = parts[0], AttachedText = parts[1], IsShellCommand = (parts[2] == "true") });
+
+                    // add the text to the known choices of speechengine
+                    texts.Add(parts[0]);
+                }
+                Grammar wordsList = new Grammar(new GrammarBuilder(texts));
+                speechRecognitionEngine.LoadGrammar(wordsList);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        /// <summary>
+        /// Gets the known command.
+        /// </summary>
+        /// <param name="command">The order.</param>
+        /// <returns></returns>
+        private string getKnownTextOrExecute(string command)
+        {
+            try
+            {
+                var cmd = words.Where(c => c.Text == command).First();
+
+                if (cmd.IsShellCommand)
+                {
+                    Process proc = new Process();
+                    proc.EnableRaisingEvents = false;
+                    proc.StartInfo.FileName = cmd.AttachedText;
+                    proc.Start();
+                    return "you just started : " + cmd.AttachedText;
+                }
+                else
+                {
+                    return cmd.AttachedText;
+                }
+            }
+            catch (Exception)
+            {
+                return command;
+            }
+        }
